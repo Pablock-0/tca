@@ -91,3 +91,16 @@ Dos features planeadas para la siguiente ronda de desarrollo:
 1. **Detección de flechas por cámara**: en vez de marcar el toque a mano sobre la diana en pantalla, la app tomará una foto de la diana física y detectará automáticamente las coordenadas de las flechas clavadas a partir de la imagen, convirtiéndolas en los mismos datos (P, UR) que hoy genera el toque manual.
 2. **Zoom en el resumen de un entrenamiento**: la vista de mapa de calor de `EstadisticasResumenScreen.kt` (que usa `DianaMapaDeCalor` en `DianaCanvas.kt`) ganará una forma de hacer zoom sobre la diana para inspeccionar agrupaciones de flechas con más detalle, similar en espíritu al modo Zoom que ya existe en la pantalla principal pero aplicado a datos históricos ya guardados en vez de al marcaje en vivo.
 3. **Diana de silueta de atacante**: además de la diana convencional (círculos concéntricos), la app permitirá elegir un segundo tipo de diana con forma de silueta humana ("de atacante"), como alternativa de entrenamiento. Implica una segunda geometría de puntaje en `DianaLogic.kt` (o una `calcularToque`/`posicionEnDiana` parametrizada por tipo de diana) y un segundo dibujo en `DianaCanvas.kt`, además de guardar el tipo elegido junto al resto de la configuración de diana (`DianaConfig`/Ajustes).
+
+## Licencia
+
+Doble licencia, aplicable a todo el contenido presente y futuro del repo:
+
+- **Código**: [MIT License](LICENSE) — libre para cualquier uso, incluido comercial, conservando el aviso de copyright.
+- **Documentación y explicaciones** (este README y los comentarios descriptivos del código): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) — libre para cualquier uso, incluido comercial, dando crédito a Pablock-0.
+
+```
+(c) Pablock-0
+Código: MIT License
+Documentación/explicaciones: CC BY 4.0
+```

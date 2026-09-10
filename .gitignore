@@ -10,3 +10,8 @@ local.properties
 app/build/
 build/
 .idea/
+
+# Imagen fuente del ícono (generada con IA, lleva manifiesto C2PA). Se conserva
+# en local por si se necesita, pero no se versiona: la app usa los PNG de
+# res/mipmap-*, este archivo no está enlazado a nada.
+/tca.jpeg
