@@ -1,0 +1,210 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "a3d5cc942382aab6eaf2bb30ffa33335",
+    "entities": [
+      {
+        "tableName": "entrenamientos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `fecha` TEXT NOT NULL, `nombre` TEXT, `finalizado` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fecha",
+            "columnName": "fecha",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "finalizado",
+            "columnName": "finalizado",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "series",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `entrenamientoId` INTEGER NOT NULL, `orden` INTEGER NOT NULL, `distancia` REAL NOT NULL, `dianaCm` INTEGER NOT NULL, `tiempoSegundos` INTEGER NOT NULL, FOREIGN KEY(`entrenamientoId`) REFERENCES `entrenamientos`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entrenamientoId",
+            "columnName": "entrenamientoId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orden",
+            "columnName": "orden",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "distancia",
+            "columnName": "distancia",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dianaCm",
+            "columnName": "dianaCm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tiempoSegundos",
+            "columnName": "tiempoSegundos",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_series_entrenamientoId",
+            "unique": false,
+            "columnNames": [
+              "entrenamientoId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_series_entrenamientoId` ON `${TABLE_NAME}` (`entrenamientoId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "entrenamientos",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "entrenamientoId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "flechas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `serieId` INTEGER NOT NULL, `orden` INTEGER NOT NULL, `puntaje` INTEGER NOT NULL, `ubicacionRadialAzimut` INTEGER NOT NULL, FOREIGN KEY(`serieId`) REFERENCES `series`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serieId",
+            "columnName": "serieId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orden",
+            "columnName": "orden",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "puntaje",
+            "columnName": "puntaje",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ubicacionRadialAzimut",
+            "columnName": "ubicacionRadialAzimut",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_flechas_serieId",
+            "unique": false,
+            "columnNames": [
+              "serieId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_flechas_serieId` ON `${TABLE_NAME}` (`serieId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "series",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "serieId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "diana_config",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`distancia` REAL NOT NULL, `dianaCm` INTEGER NOT NULL, PRIMARY KEY(`distancia`))",
+        "fields": [
+          {
+            "fieldPath": "distancia",
+            "columnName": "distancia",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dianaCm",
+            "columnName": "dianaCm",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "distancia"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a3d5cc942382aab6eaf2bb30ffa33335')"
+    ]
+  }
+}

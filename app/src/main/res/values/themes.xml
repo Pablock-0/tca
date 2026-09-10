@@ -1,0 +1,4 @@
+<resources>
+    <!-- Tema oscuro fijo (ver prompt: "diseño minimalista, tema oscuro"), no sigue al sistema. -->
+    <style name="Theme.Tca" parent="android:Theme.Material.NoActionBar" />
+</resources>
