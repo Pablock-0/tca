@@ -38,8 +38,12 @@ class PrincipalViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { repo.marcarEnEspera() }
     }
 
-    fun textoContador(contador: Int): String {
-        val digitos = contadorExtensionDigitos.value
+    // digitos se recibe como parámetro (no se lee de contadorExtensionDigitos.value)
+    // porque ese StateFlow usa WhileSubscribed: si nada lo colecta con
+    // collectAsState() en la pantalla, la fuente de Ajustes nunca se suscribe y
+    // .value se queda pegado en el default — era justo lo que pasaba antes (el
+    // ajuste de dígitos no tenía ningún efecto).
+    fun textoContador(contador: Int, digitos: Int): String {
         val modulo = Math.pow(10.0, digitos.toDouble()).toInt()
         return if (contador < 0) "Iniciar" else (contador % modulo).toString().padStart(digitos, '0')
     }

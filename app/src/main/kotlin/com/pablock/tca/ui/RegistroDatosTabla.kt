@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.pablock.tca.FlechaPendiente
 import com.pablock.tca.PUNTAJE_X
@@ -79,11 +81,13 @@ fun RegistroDatosTabla(
                 CampoTexto(
                     valor = fila.puntajeTexto,
                     onCambiar = { nuevo -> onFilasCambiadas(filas.toMutableList().also { it[i] = fila.copy(puntajeTexto = nuevo) }) },
+                    teclado = KeyboardType.Number,
                     modifier = Modifier.width(60.dp),
                 )
                 CampoTexto(
                     valor = fila.ubicacionTexto,
                     onCambiar = { nuevo -> onFilasCambiadas(filas.toMutableList().also { it[i] = fila.copy(ubicacionTexto = nuevo) }) },
+                    teclado = KeyboardType.Number,
                     modifier = Modifier.width(80.dp).padding(start = 10.dp),
                 )
                 Icon(
@@ -103,11 +107,17 @@ fun RegistroDatosTabla(
 }
 
 @Composable
-private fun CampoTexto(valor: String, onCambiar: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun CampoTexto(
+    valor: String,
+    onCambiar: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    teclado: KeyboardType = KeyboardType.Text,
+) {
     BasicTextField(
         value = valor,
         onValueChange = onCambiar,
         textStyle = TextStyle(color = Color.White),
+        keyboardOptions = KeyboardOptions(keyboardType = teclado),
         modifier = modifier
             .border(BorderStroke(1.dp, COLOR_BORDE_CAMPO), RoundedCornerShape(4.dp))
             .padding(horizontal = 8.dp, vertical = 6.dp),

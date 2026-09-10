@@ -144,13 +144,20 @@ private fun EditarNotasDialog(
         text = {
             LazyColumn {
                 items(notas, key = { it.id }) { nota ->
+                    // value = nota.titulo directo (sin estado local) causaba el glitch:
+                    // cada letra escribe en Room, Room reemite la lista por Flow, y esa
+                    // vuelta async pisaba lo que el campo mostraba a medio tecleo, con el
+                    // cursor reapareciendo al inicio del texto. Un texto local por nota
+                    // (como ya se hace en EditarDianasDialog) absorbe el tecleo y solo
+                    // dispara el guardado, sin esperar a que vuelva por el Flow.
+                    var texto by remember(nota.id) { mutableStateOf(nota.titulo) }
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         OutlinedTextField(
-                            value = nota.titulo,
-                            onValueChange = { onRenombrar(nota, it) },
+                            value = texto,
+                            onValueChange = { nuevo -> texto = nuevo; onRenombrar(nota, nuevo) },
                             modifier = Modifier.weight(1f),
                         )
                         if (!nota.esNota0) {

@@ -27,12 +27,15 @@ class ClimaViewModel(app: Application) : AndroidViewModel(app) {
     val cargando: StateFlow<Boolean> = _cargando
 
     init {
-        // Al abrir la pantalla: si hay ciudad configurada, internet, y todavía no se
-        // actualizó hoy, pide el reporte una sola vez — nunca más de una vez al día.
+        // Al abrir la pantalla (entrar a Herramientas > Clima): si hay ciudad
+        // configurada, actualiza igual que el botón de refrescar de la esquina
+        // (forzar=true) — el candado de $CLIMA_PETICIONES_MAXIMO_DIA/día sigue
+        // aplicando dentro de actualizar(), forzar solo salta el "ya se actualizó
+        // hoy" para que abrir la pantalla siempre traiga el dato más reciente.
         viewModelScope.launch {
             val ciudadGuardada = ClimaPrefs.ciudadFlow(ctx).first()
-            if (!ciudadGuardada.isNullOrBlank() && !ClimaPrefs.yaActualizadoHoy(ctx)) {
-                actualizar(forzar = false)
+            if (!ciudadGuardada.isNullOrBlank()) {
+                actualizar(forzar = true)
             }
         }
     }

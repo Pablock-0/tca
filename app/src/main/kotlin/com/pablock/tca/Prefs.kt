@@ -158,12 +158,13 @@ object AjustesPrefs {
         context.tcaDataStore.edit { it[CONTADOR_CLICK_DOBLE] = doble }
     }
 
-    // Cuántos dígitos muestra el contador antes de reiniciar (1-6, default 2).
+    // Cuántos dígitos muestra el contador antes de reiniciar (1-4, default 2;
+    // con 4 dígitos cuenta hasta 9999 antes de reiniciar a 0000).
     fun contadorExtensionDigitosFlow(context: Context): Flow<Int> =
         context.tcaDataStore.data.map { it[CONTADOR_EXTENSION_DIGITOS] ?: 2 }
 
     suspend fun setContadorExtensionDigitos(context: Context, digitos: Int) {
-        context.tcaDataStore.edit { it[CONTADOR_EXTENSION_DIGITOS] = digitos.coerceIn(1, 6) }
+        context.tcaDataStore.edit { it[CONTADOR_EXTENSION_DIGITOS] = digitos.coerceIn(1, 4) }
     }
 
     fun registroModoFlow(context: Context): Flow<RegistroModo> =

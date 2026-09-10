@@ -136,7 +136,7 @@ fun AjustesScreen(
         FilaDropdownEntero(
             etiqueta = "Dígitos en contador",
             valor = contadorDigitos,
-            opciones = (1..6).toList(),
+            opciones = (1..4).toList(),
             onSeleccionar = viewModel::setContadorExtensionDigitos,
         )
         FilaSwitch(etiqueta = "Zoom default", valor = zoomDefault, onCambiar = viewModel::setZoomDefault)

@@ -58,6 +58,7 @@ fun PrincipalScreen(
 ) {
     val estado by viewModel.estado.collectAsState()
     val contadorClickDoble by viewModel.contadorClickDoble.collectAsState()
+    val contadorDigitos by viewModel.contadorExtensionDigitos.collectAsState()
     val registroModo by viewModel.registroModo.collectAsState()
     val ubicacionReloj by viewModel.ubicacionRadialReloj.collectAsState()
     val distanciasGuardadas by viewModel.distanciasGuardadas.collectAsState()
@@ -94,7 +95,7 @@ fun PrincipalScreen(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     BotonBordeAccion(doble = contadorClickDoble, padding = 25.dp, onActivar = viewModel::onAvanzarContador) {
-                        Text(viewModel.textoContador(estado.contador), color = Color.White, fontSize = 33.sp)
+                        Text(viewModel.textoContador(estado.contador, contadorDigitos), color = Color.White, fontSize = 33.sp)
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     BotonBorde(onClick = viewModel::onToggleZoom) {
@@ -158,7 +159,7 @@ fun PrincipalScreen(
         ) {
             MitadBarraInferior(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
-                onClick = {
+                onAccion = {
                     if (registroModo == RegistroModo.DATOS) {
                         filasDatos = List(FILAS_DATOS_DEFAULT) { FilaDatos() }
                     } else {
@@ -177,7 +178,7 @@ fun PrincipalScreen(
             MitadBarraInferior(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 doble = contadorClickDoble,
-                onDobleClick = {
+                onAccion = {
                     if (registroModo == RegistroModo.DATOS) {
                         viewModel.onGuardarDatosManual(parsearFilasDatos(filasDatos, ubicacionReloj))
                         filasDatos = List(FILAS_DATOS_DEFAULT) { FilaDatos() }
@@ -229,12 +230,16 @@ fun PrincipalScreen(
 // Mitad de la barra inferior (Regresar/Guardar): sin borde propio ni padding fijo,
 // solo el clickable — el "cuadro" de antes ahora es la línea de arriba + el divisor
 // central de la barra completa (ver Row que la contiene).
+// Un solo callback (onAccion) para ambos modos: antes onClick/onDobleClick estaban
+// separados y Guardar solo pasaba onDobleClick, así que con "Click de contador" en
+// Simple (doble=false) el Modifier.clickable llamaba a un onClick que nunca se
+// pasó — Guardar quedaba sin hacer nada. Con un único callback, "simple" y "doble"
+// solo cambian cuántos toques hacen falta para dispararlo, nunca si se dispara.
 @Composable
 private fun MitadBarraInferior(
     modifier: Modifier = Modifier,
     doble: Boolean = false,
-    onClick: (() -> Unit)? = null,
-    onDobleClick: (() -> Unit)? = null,
+    onAccion: () -> Unit,
     content: @Composable BoxScope.() -> Unit,
 ) {
     var ultimoClickMs by remember { mutableLongStateOf(0L) }
@@ -243,13 +248,13 @@ private fun MitadBarraInferior(
             val ahora = System.currentTimeMillis()
             if (ahora - ultimoClickMs <= UMBRAL_DOBLE_CLICK_MS) {
                 ultimoClickMs = 0L
-                onDobleClick?.invoke()
+                onAccion()
             } else {
                 ultimoClickMs = ahora
             }
         }
     } else {
-        Modifier.clickable { onClick?.invoke() }
+        Modifier.clickable { onAccion() }
     }
     Box(modifier = modifier.then(interaccion), contentAlignment = Alignment.Center, content = content)
 }
