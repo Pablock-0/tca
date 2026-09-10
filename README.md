@@ -2,6 +2,21 @@
 
 App Android nativa (Kotlin + Jetpack Compose) para registrar entrenamientos de tiro con arco: contador de flechas, diana interactiva con marcaje por toque, estadísticas por entrenamiento, notas, y herramientas de campo (clima, nivel, brújula).
 
+## 📲 Instalar la app en tu teléfono (sin saber de programación)
+
+Solo necesitas un teléfono **Android**. Hazlo **desde el teléfono**, no desde la computadora:
+
+1. Abre este enlace y espera a que baje el archivo:
+   ### 👉 [Descargar TCA](https://github.com/Pablock-0/tca/releases/latest/download/tca.apk)
+2. Cuando termine, toca el archivo descargado (**`tca.apk`**). Aparece en la barra de notificaciones o en tu carpeta **Descargas**.
+3. La primera vez, Android dirá que no puede instalar apps de este origen. Toca **Ajustes** en ese aviso y activa **Permitir de esta fuente**; luego regresa.
+4. Toca **Instalar**. Si sale una advertencia de *Play Protect*, toca **Más detalles → Instalar de todas formas**.
+5. Abre **TCA** desde tus aplicaciones. Listo.
+
+> Es una app para instalar por tu cuenta (no está en Google Play). Todos tus datos se quedan **solo en tu teléfono**; lo único que usa internet es la herramienta de Clima. Para desinstalarla, mantén presionado el ícono y elige *Desinstalar*.
+
+---
+
 ## Stack técnico
 
 - Kotlin + Jetpack Compose (Material3), minSdk 26, target/compileSdk 37.
@@ -83,6 +98,18 @@ adb install --no-streaming -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 `--no-streaming` puede ser necesario en algunos dispositivos con restricciones del fabricante para evitar `INSTALL_FAILED_USER_RESTRICTED`. En esos mismos dispositivos la inyección de toques por ADB (`adb shell input tap/text`) puede fallar con `SecurityException` (el sistema no concede `INJECT_EVENTS`), así que las pruebas de interacción táctil se hacen físicamente en el teléfono, no por ADB.
+
+### Publicar una versión descargable
+
+El enlace "Descargar TCA" de arriba apunta a `releases/latest/download/tca.apk`. Para actualizarlo tras un cambio:
+
+```
+./gradlew :app:assembleDebug
+cp app/build/outputs/apk/debug/app-debug.apk tca.apk
+gh release create vX.Y -R Pablock-0/tca -t "TCA vX.Y" -n "Cambios de esta versión" tca.apk
+```
+
+El APK va firmado con la llave de debug (no hay `signingConfig` de release); para instalar de forma manual entre teléfonos es suficiente. `tca.apk` está en `.gitignore`, no se versiona — vive solo como asset del release.
 
 ## Próxima versión (sin implementar todavía)
 

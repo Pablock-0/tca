@@ -15,3 +15,6 @@ build/
 # en local por si se necesita, pero no se versiona: la app usa los PNG de
 # res/mipmap-*, este archivo no está enlazado a nada.
 /tca.jpeg
+
+# APK que se sube como asset del release (ver README > Publicar una versión).
+/tca.apk
