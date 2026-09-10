@@ -82,7 +82,7 @@ app/src/main/kotlin/com/pablock/tca/
 adb install --no-streaming -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-`--no-streaming` es necesario en el dispositivo de pruebas (MIUI) para evitar `INSTALL_FAILED_USER_RESTRICTED`. La inyección de toques por ADB (`adb shell input tap/text`) falla con `SecurityException` en ese dispositivo (MIUI no concede `INJECT_EVENTS`), así que las pruebas de interacción táctil se hacen físicamente en el teléfono, no por ADB.
+`--no-streaming` puede ser necesario en algunos dispositivos con restricciones del fabricante para evitar `INSTALL_FAILED_USER_RESTRICTED`. En esos mismos dispositivos la inyección de toques por ADB (`adb shell input tap/text`) puede fallar con `SecurityException` (el sistema no concede `INJECT_EVENTS`), así que las pruebas de interacción táctil se hacen físicamente en el teléfono, no por ADB.
 
 ## Próxima versión (sin implementar todavía)
 
