@@ -8,11 +8,18 @@ plugins {
 
 // Llave de OpenWeatherMap: nunca en el código fuente ni en git — vive solo en
 // local.properties (gitignorada a nivel de repo) y llega al código vía BuildConfig.
+//
+// Para compilar el APK que se distribuye públicamente (Releases de GitHub), usar
+// -PtcaPublicBuild=true: fuerza la llave vacía sin tocar local.properties, para que
+// el binario nunca lleve la llave personal (queda en BuildConfig como ""; cada quien
+// pone la suya desde la app, ver ClimaScreen). Ejemplo:
+//   ./gradlew assembleRelease -PtcaPublicBuild=true
 val propiedadesLocales = Properties().apply {
     val archivo = rootProject.file("local.properties")
     if (archivo.exists()) archivo.inputStream().use { load(it) }
 }
-val owmApiKey: String = propiedadesLocales.getProperty("OWM_API_KEY", "")
+val owmApiKey: String =
+    if (project.hasProperty("tcaPublicBuild")) "" else propiedadesLocales.getProperty("OWM_API_KEY", "")
 
 android {
     namespace = "com.pablock.tca"
@@ -22,8 +29,8 @@ android {
         applicationId = "com.pablock.tca"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.2"
         buildConfigField("String", "OWM_API_KEY", "\"$owmApiKey\"")
     }
 

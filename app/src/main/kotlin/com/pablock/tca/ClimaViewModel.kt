@@ -17,6 +17,11 @@ class ClimaViewModel(app: Application) : AndroidViewModel(app) {
     val ciudad: StateFlow<String?> = ClimaPrefs.ciudadFlow(ctx)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    // Llave puesta a mano por quien instala el APK (vacía en un build personal donde
+    // BuildConfig.OWM_API_KEY ya trae la de local.properties). Ver apiKeyEfectiva().
+    val apiKeyGuardada: StateFlow<String?> = ClimaPrefs.apiKeyFlow(ctx)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val reporte: StateFlow<ReporteClima?> = ClimaPrefs.reporteFlow(ctx)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -25,6 +30,21 @@ class ClimaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _cargando = MutableStateFlow(false)
     val cargando: StateFlow<Boolean> = _cargando
+
+    // true cuando no hay ninguna llave disponible (ni de BuildConfig ni guardada) — la
+    // pantalla usa esto para abrir el diálogo de pedir la llave automáticamente.
+    private val _necesitaApiKey = MutableStateFlow(false)
+    val necesitaApiKey: StateFlow<Boolean> = _necesitaApiKey
+
+    fun setApiKey(key: String) = viewModelScope.launch { ClimaPrefs.setApiKey(ctx, key.trim()) }
+
+    // BuildConfig trae la llave real en un build personal (local.properties lleno) y
+    // vacía en el APK público (compilado con -PtcaPublicBuild=true, ver build.gradle.kts);
+    // en ese caso se usa la que la persona haya puesto a mano en la app.
+    private suspend fun apiKeyEfectiva(): String {
+        if (BuildConfig.OWM_API_KEY.isNotBlank()) return BuildConfig.OWM_API_KEY
+        return ClimaPrefs.apiKeyFlow(ctx).first().orEmpty()
+    }
 
     init {
         // Al abrir la pantalla (entrar a Herramientas > Clima): si hay ciudad
@@ -51,8 +71,10 @@ class ClimaViewModel(app: Application) : AndroidViewModel(app) {
             _mensaje.value = "Configura una ciudad primero."
             return@launch
         }
-        if (BuildConfig.OWM_API_KEY.isBlank()) {
-            _mensaje.value = "Falta la API key de OpenWeatherMap (se configura en local.properties)."
+        val key = apiKeyEfectiva()
+        if (key.isBlank()) {
+            _necesitaApiKey.value = true
+            _mensaje.value = "Configura tu llave de OpenWeatherMap para usar Clima."
             return@launch
         }
         if (!hayInternet(ctx)) {
@@ -67,9 +89,18 @@ class ClimaViewModel(app: Application) : AndroidViewModel(app) {
 
         _cargando.value = true
         ClimaPrefs.registrarPeticion(ctx)
-        val resultado = repo.descargarReporte(ciudadActual, BuildConfig.OWM_API_KEY)
-        resultado.onSuccess { ClimaPrefs.guardarReporte(ctx, it) }
-            .onFailure { _mensaje.value = "No se pudo actualizar: ${it.message}" }
+        val resultado = repo.descargarReporte(ciudadActual, key)
+        resultado.onSuccess {
+            _necesitaApiKey.value = false
+            ClimaPrefs.guardarReporte(ctx, it)
+        }.onFailure {
+            _mensaje.value = if (it.message?.contains("401") == true) {
+                _necesitaApiKey.value = true
+                "Llave inválida — revisa que la copiaste bien."
+            } else {
+                "No se pudo actualizar: ${it.message}"
+            }
+        }
         _cargando.value = false
     }
 }

@@ -51,6 +51,7 @@ const val CLIMA_PETICIONES_MAXIMO_DIA = 40
 
 object ClimaPrefs {
     private val CIUDAD = stringPreferencesKey("clima_ciudad")
+    private val API_KEY = stringPreferencesKey("clima_api_key")
     private val REPORTE_JSON = stringPreferencesKey("clima_reporte_json")
     private val ULTIMA_ACTUALIZACION_FECHA = stringPreferencesKey("clima_ultima_actualizacion_fecha")
     private val PETICIONES_FECHA = stringPreferencesKey("clima_peticiones_fecha")
@@ -60,6 +61,16 @@ object ClimaPrefs {
 
     suspend fun setCiudad(context: Context, ciudad: String) {
         context.tcaDataStore.edit { it[CIUDAD] = ciudad }
+    }
+
+    // Llave que pone a mano quien instala el APK público (BuildConfig.OWM_API_KEY viene
+    // vacío en ese build, ver app/build.gradle.kts > tcaPublicBuild). En un build personal
+    // con local.properties lleno, esta queda vacía y se usa la de BuildConfig (ver
+    // ClimaViewModel.apiKeyEfectiva).
+    fun apiKeyFlow(context: Context): Flow<String?> = context.tcaDataStore.data.map { it[API_KEY] }
+
+    suspend fun setApiKey(context: Context, key: String) {
+        context.tcaDataStore.edit { it[API_KEY] = key }
     }
 
     fun reporteFlow(context: Context): Flow<ReporteClima?> = context.tcaDataStore.data.map { prefs ->

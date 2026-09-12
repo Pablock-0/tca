@@ -11,10 +11,12 @@ app/build/
 build/
 .idea/
 
-# Imagen fuente del ícono (generada con IA, lleva manifiesto C2PA). Se conserva
-# en local por si se necesita, pero no se versiona: la app usa los PNG de
-# res/mipmap-*, este archivo no está enlazado a nada.
+# Imagen fuente del ícono (generada con IA). Se conserva en local por si se
+# necesita, pero no se versiona: la app usa los PNG de res/mipmap-*, este
+# archivo no está enlazado a nada. tca.jpeg llevaba manifiesto C2PA; t1.png
+# la reemplazó (2026-09-11) y no trae metadata alguna (verificado).
 /tca.jpeg
+/t1.png
 
 # APK que se sube como asset del release (ver README > Publicar una versión).
 /tca.apk
