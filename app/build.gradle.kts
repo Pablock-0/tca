@@ -31,8 +31,8 @@ android {
         applicationId = "com.pablock.tca"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.2"
+        versionCode = 3
+        versionName = "0.3"
         buildConfigField("String", "OWM_API_KEY", "\"$owmApiKey\"")
     }
 
