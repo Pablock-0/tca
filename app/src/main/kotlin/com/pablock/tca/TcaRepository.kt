@@ -155,7 +155,14 @@ class TcaRepository(private val context: Context) {
         val series = db.serieDao().obtenerPorEntrenamiento(entrenamientoId)
         val flechas = db.flechaDao().obtenerPorSeries(series.map { it.id })
         val conteo = flechas.groupingBy { it.puntaje to it.ubicacionRadialAzimut }.eachCount()
-        return ResumenEntrenamiento(entrenamiento, flechas.size, conteo)
+        // "Flechas totales" debe sumar TODA la actividad del entrenamiento, no solo las
+        // flechas con P/UR real: una serie avanzada solo con el contador (sin Guardar) no
+        // deja filas en Flecha, pero sí tiene Serie.flechasEstimadas — mismo criterio que
+        // numeroFlechas() en cargarDetalle. El mapa de calor (conteoPorCoordenada) sigue
+        // basado solo en flechas reales, porque las estimadas no tienen coordenada que graficar.
+        val flechasPorSerieId = flechas.groupingBy { it.serieId }.eachCount()
+        val totalFlechas = series.sumOf { it.flechasEstimadas ?: (flechasPorSerieId[it.id] ?: 0) }
+        return ResumenEntrenamiento(entrenamiento, totalFlechas, conteo)
     }
 
     suspend fun cargarDetalle(entrenamientoId: Long): DetalleEntrenamiento? {
