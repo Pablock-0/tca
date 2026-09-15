@@ -12,8 +12,10 @@ plugins {
 // Para compilar el APK que se distribuye públicamente (Releases de GitHub), usar
 // -PtcaPublicBuild=true: fuerza la llave vacía sin tocar local.properties, para que
 // el binario nunca lleve la llave personal (queda en BuildConfig como ""; cada quien
-// pone la suya desde la app, ver ClimaScreen). Ejemplo:
-//   ./gradlew assembleRelease -PtcaPublicBuild=true
+// pone la suya desde la app, ver ClimaScreen). El build type "release" no tiene
+// signingConfig (assembleRelease genera un APK sin firmar, no instalable) — para
+// distribuir se usa debug, que sí queda firmado. Ejemplo:
+//   ./gradlew :app:assembleDebug -PtcaPublicBuild=true
 val propiedadesLocales = Properties().apply {
     val archivo = rootProject.file("local.properties")
     if (archivo.exists()) archivo.inputStream().use { load(it) }
