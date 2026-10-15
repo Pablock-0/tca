@@ -168,13 +168,19 @@ class TcaRepository(private val context: Context) {
     private fun sumarFlechasDeSeries(series: List<Serie>, flechasPorSerieId: Map<Long, Int>): Int =
         series.sumOf { it.flechasEstimadas ?: (flechasPorSerieId[it.id] ?: 0) }
 
-    // Total en vivo para la pantalla principal mientras el entrenamiento sigue abierto — no
-    // incluye las flechas de la serie actual aún sin avanzar (esas las suma el ViewModel aparte,
-    // ver PrincipalViewModel.totalFlechasEntrenamiento, porque solo él conoce flechasPendientes).
-    suspend fun totalFlechasEnCurso(entrenamientoId: Long): Int {
+    // Estado en vivo para la pantalla principal mientras el entrenamiento sigue abierto —
+    // no incluye las flechas de la serie actual aún sin avanzar (esas las suma el
+    // ViewModel aparte, ver PrincipalViewModel.estadoVivoEntrenamiento, porque solo él
+    // conoce flechasPendientes). Una sola consulta a Room resuelve total + puntaje/posible.
+    suspend fun estadoVivoEnCurso(entrenamientoId: Long): EstadoVivoEntrenamiento {
         val series = db.serieDao().obtenerPorEntrenamiento(entrenamientoId)
-        val flechasPorSerieId = db.flechaDao().obtenerPorSeries(series.map { it.id }).groupingBy { it.serieId }.eachCount()
-        return sumarFlechasDeSeries(series, flechasPorSerieId)
+        val flechas = db.flechaDao().obtenerPorSeries(series.map { it.id })
+        val flechasPorSerieId = flechas.groupingBy { it.serieId }.eachCount()
+        return EstadoVivoEntrenamiento(
+            totalFlechas = sumarFlechasDeSeries(series, flechasPorSerieId),
+            puntaje = flechas.sumOf { valorParaPromedio(it.puntaje) },
+            puntajePosible = flechas.size * 10,
+        )
     }
 
     suspend fun cargarResumen(entrenamientoId: Long): ResumenEntrenamiento? {

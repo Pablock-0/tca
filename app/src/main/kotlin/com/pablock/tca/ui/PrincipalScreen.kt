@@ -57,7 +57,8 @@ fun PrincipalScreen(
     viewModel: PrincipalViewModel = viewModel(),
 ) {
     val estado by viewModel.estado.collectAsState()
-    val totalFlechasEntrenamiento by viewModel.totalFlechasEntrenamiento.collectAsState()
+    val estadoVivo by viewModel.estadoVivoEntrenamiento.collectAsState()
+    val scoreVisible by viewModel.scoreVisible.collectAsState()
     val contadorClickDoble by viewModel.contadorClickDoble.collectAsState()
     val contadorDigitos by viewModel.contadorExtensionDigitos.collectAsState()
     val registroModo by viewModel.registroModo.collectAsState()
@@ -121,7 +122,7 @@ fun PrincipalScreen(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().statusBarsPadding().padding(top = 16.dp),
             ) {
                 if (estado.contador >= 0) {
-                    Text(text = totalFlechasEntrenamiento.toString(), color = Color.White, fontSize = 40.sp)
+                    Text(text = estadoVivo.totalFlechas.toString(), color = Color.White, fontSize = 40.sp)
                 }
                 Text(
                     text = if (ultima != null) "${estado.flechasPendientes.size}-${textoPuntaje(ultima.puntaje)}" else "",
@@ -148,12 +149,25 @@ fun PrincipalScreen(
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
-                DianaInteractiva(
-                    flechasPendientes = estado.flechasPendientes,
-                    zoom = estado.zoomActivo,
-                    onToque = viewModel::onToqueDiana,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                // Box del mismo tamaño exacto que el target (DianaInteractiva ya aplica
+                // fillMaxWidth().aspectRatio(1f) internamente; se repite aquí para que el
+                // score quede anclado a SU esquina, no a la del espacio centrado alrededor).
+                Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f)) {
+                    DianaInteractiva(
+                        flechasPendientes = estado.flechasPendientes,
+                        zoom = estado.zoomActivo,
+                        onToque = viewModel::onToqueDiana,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    if (scoreVisible) {
+                        Text(
+                            text = "${estadoVivo.puntaje}/${estadoVivo.puntajePosible}",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            modifier = Modifier.align(Alignment.BottomStart).padding(8.dp),
+                        )
+                    }
+                }
             }
         }
 

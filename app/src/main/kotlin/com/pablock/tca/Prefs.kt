@@ -227,6 +227,17 @@ object AjustesPrefs {
         context.tcaDataStore.edit { it[ZOOM_DEFAULT] = activo }
     }
 
+    // Muestra el puntaje/posible en la esquina de la diana en la pantalla principal
+    // (ver PrincipalScreen.kt) — apagado por default.
+    private val SCORE_VISIBLE = booleanPreferencesKey("score_visible")
+
+    fun scoreVisibleFlow(context: Context): Flow<Boolean> =
+        context.tcaDataStore.data.map { it[SCORE_VISIBLE] ?: false }
+
+    suspend fun setScoreVisible(context: Context, visible: Boolean) {
+        context.tcaDataStore.edit { it[SCORE_VISIBLE] = visible }
+    }
+
     // Distancia a la que se resetea EntrenamientoEnCursoPrefs.DISTANCIA al terminar un
     // entrenamiento completo (nunca entre series, ver TcaRepository.terminarEntrenamiento).
     // null = "Ninguna" (default): la distancia se queda como la última usada, igual que el

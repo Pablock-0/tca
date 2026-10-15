@@ -24,6 +24,9 @@ class AjustesViewModel(app: Application) : AndroidViewModel(app) {
     val zoomDefault: StateFlow<Boolean> = AjustesPrefs.zoomDefaultFlow(ctx)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val scoreVisible: StateFlow<Boolean> = AjustesPrefs.scoreVisibleFlow(ctx)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val flechasDefault: StateFlow<Int> = AjustesPrefs.flechasDefaultFlow(ctx)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 6)
 
@@ -54,6 +57,8 @@ class AjustesViewModel(app: Application) : AndroidViewModel(app) {
     fun setContadorExtensionDigitos(digitos: Int) = viewModelScope.launch { AjustesPrefs.setContadorExtensionDigitos(ctx, digitos) }
 
     fun setZoomDefault(activo: Boolean) = viewModelScope.launch { AjustesPrefs.setZoomDefault(ctx, activo) }
+
+    fun setScoreVisible(visible: Boolean) = viewModelScope.launch { AjustesPrefs.setScoreVisible(ctx, visible) }
 
     fun setFlechasDefault(cantidad: Int) = viewModelScope.launch { AjustesPrefs.setFlechasDefault(ctx, cantidad) }
 

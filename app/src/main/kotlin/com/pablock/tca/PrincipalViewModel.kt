@@ -21,29 +21,43 @@ class PrincipalViewModel(app: Application) : AndroidViewModel(app) {
             EntrenamientoEnCursoPrefs.Estado(null, -1, 10.0, 0L, emptyList(), false),
         )
 
-    // Total de flechas del entrenamiento en curso (blanco, junto al "n-P" verde en
-    // PrincipalScreen) — suma las series ya avanzadas (repo.totalFlechasEnCurso, incluye
-    // las "no registradas" del contador) + las flechas pendientes de la serie activa aún
-    // sin avanzar/guardar (esas solo las conoce este ViewModel, no la base de datos). Se
-    // re-consulta solo cuando cambia algo relevante, no en cada emisión de `estado` (evita
-    // golpear la base en cada campo no relacionado).
+    // Estado en vivo del entrenamiento en curso para la pantalla principal: total de
+    // flechas (blanco, junto al "n-P" verde) y puntaje/posible (esquina de la diana, si
+    // Ajustes > "Score en vivo" está encendido) — suma lo ya guardado en Room
+    // (repo.estadoVivoEnCurso) + las flechas pendientes de la serie activa aún sin
+    // avanzar/guardar (esas solo las conoce este ViewModel). Se re-consulta solo cuando
+    // cambia algo relevante, no en cada emisión de `estado` (evita golpear la base en
+    // cada campo no relacionado).
     //
     // Bug 2026-10-02: la clave de distinctUntilChanged solo llevaba (entrenamientoId,
     // pendientes.size) — avanzar de serie SOLO con el contador (sin tocar la diana) crea
     // una Serie nueva en Room (con flechasEstimadas), pero no cambia ninguno de esos dos
     // campos: el entrenamiento sigue siendo el mismo y flechasPendientes se resetea de
     // vacío a vacío. Como la clave no cambiaba, distinctUntilChanged la descartaba y
-    // totalFlechasEnCurso() nunca se volvía a pedir — el número en Room ya estaba bien,
+    // estadoVivoEnCurso() nunca se volvía a pedir — el número en Room ya estaba bien,
     // solo no se re-consultaba hasta el siguiente toque en la diana (que sí cambia
-    // pendientes.size). Se agrega `contador` a la clave: se incrementa en cada avance
+    // flechasPendientes). Se agrega `contador` a la clave: se incrementa en cada avance
     // (con o sin diana), así que ahora SIEMPRE dispara el recálculo correspondiente.
-    val totalFlechasEntrenamiento: StateFlow<Int> = estado
-        .map { Triple(it.entrenamientoId, it.contador, it.flechasPendientes.size) }
+    val estadoVivoEntrenamiento: StateFlow<EstadoVivoEntrenamiento> = estado
+        .map { Triple(it.entrenamientoId, it.contador, it.flechasPendientes) }
         .distinctUntilChanged()
         .map { (entrenamientoId, _, pendientes) ->
-            if (entrenamientoId == null) 0 else repo.totalFlechasEnCurso(entrenamientoId) + pendientes
+            if (entrenamientoId == null) {
+                EstadoVivoEntrenamiento(totalFlechas = 0, puntaje = 0, puntajePosible = 0)
+            } else {
+                val base = repo.estadoVivoEnCurso(entrenamientoId)
+                base.copy(
+                    totalFlechas = base.totalFlechas + pendientes.size,
+                    puntaje = base.puntaje + pendientes.sumOf { valorParaPromedio(it.puntaje) },
+                    puntajePosible = base.puntajePosible + pendientes.size * 10,
+                )
+            }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            EstadoVivoEntrenamiento(totalFlechas = 0, puntaje = 0, puntajePosible = 0),
+        )
 
     val contadorClickDoble: StateFlow<Boolean> = AjustesPrefs.contadorClickDobleFlow(app)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -59,6 +73,9 @@ class PrincipalViewModel(app: Application) : AndroidViewModel(app) {
 
     val distanciasGuardadas: StateFlow<List<DianaConfig>> = repo.dianasGuardadasFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val scoreVisible: StateFlow<Boolean> = AjustesPrefs.scoreVisibleFlow(app)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     init {
         viewModelScope.launch { repo.marcarEnEspera() }

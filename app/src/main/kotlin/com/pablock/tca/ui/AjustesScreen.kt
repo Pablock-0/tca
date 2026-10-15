@@ -70,6 +70,7 @@ fun AjustesScreen(
     val contadorClickDoble by viewModel.contadorClickDoble.collectAsState()
     val contadorDigitos by viewModel.contadorExtensionDigitos.collectAsState()
     val zoomDefault by viewModel.zoomDefault.collectAsState()
+    val scoreVisible by viewModel.scoreVisible.collectAsState()
     val flechasDefault by viewModel.flechasDefault.collectAsState()
     val dianaDefaultCm by viewModel.dianaDefaultCm.collectAsState()
     val distanciaDefault by viewModel.distanciaDefault.collectAsState()
@@ -141,6 +142,7 @@ fun AjustesScreen(
             onSeleccionar = viewModel::setContadorExtensionDigitos,
         )
         FilaSwitch(etiqueta = "Zoom default", valor = zoomDefault, onCambiar = viewModel::setZoomDefault)
+        FilaSwitch(etiqueta = "Score en vivo", valor = scoreVisible, onCambiar = viewModel::setScoreVisible)
         FilaClickeable(
             etiqueta = "Flechas default",
             valor = flechasDefault.toString(),

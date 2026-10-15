@@ -2,6 +2,20 @@ package com.pablock.tca
 
 import com.pablock.tca.db.Entrenamiento
 
+// Estado en vivo de un entrenamiento en curso, para la pantalla principal (total de
+// flechas arriba de la diana, y puntaje/posible en su esquina si Ajustes > "Score en
+// vivo" está encendido) — una sola consulta a Room resuelve los tres a la vez.
+data class EstadoVivoEntrenamiento(
+    val totalFlechas: Int,
+    // Suma solo sobre flechas reales (con puntaje guardado) de las series ya guardadas
+    // con Guardar; las series avanzadas solo con el contador no aportan — no hay
+    // puntaje que contar. X cuenta como 10 (valorParaPromedio), igual que en promedios.
+    val puntaje: Int,
+    // 10 × la cantidad de esas mismas flechas reales (no todas las flechas del
+    // entrenamiento: inflar el posible con flechas de valor desconocido no tendría sentido).
+    val puntajePosible: Int,
+)
+
 data class ResumenEntrenamiento(
     val entrenamiento: Entrenamiento,
     val totalFlechas: Int,
