@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.pablock.tca.db.DianaConfig
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -18,6 +20,30 @@ class PrincipalViewModel(app: Application) : AndroidViewModel(app) {
             SharingStarted.WhileSubscribed(5000),
             EntrenamientoEnCursoPrefs.Estado(null, -1, 10.0, 0L, emptyList(), false),
         )
+
+    // Total de flechas del entrenamiento en curso (blanco, junto al "n-P" verde en
+    // PrincipalScreen) — suma las series ya avanzadas (repo.totalFlechasEnCurso, incluye
+    // las "no registradas" del contador) + las flechas pendientes de la serie activa aún
+    // sin avanzar/guardar (esas solo las conoce este ViewModel, no la base de datos). Se
+    // re-consulta solo cuando cambia algo relevante, no en cada emisión de `estado` (evita
+    // golpear la base en cada campo no relacionado).
+    //
+    // Bug 2026-10-02: la clave de distinctUntilChanged solo llevaba (entrenamientoId,
+    // pendientes.size) — avanzar de serie SOLO con el contador (sin tocar la diana) crea
+    // una Serie nueva en Room (con flechasEstimadas), pero no cambia ninguno de esos dos
+    // campos: el entrenamiento sigue siendo el mismo y flechasPendientes se resetea de
+    // vacío a vacío. Como la clave no cambiaba, distinctUntilChanged la descartaba y
+    // totalFlechasEnCurso() nunca se volvía a pedir — el número en Room ya estaba bien,
+    // solo no se re-consultaba hasta el siguiente toque en la diana (que sí cambia
+    // pendientes.size). Se agrega `contador` a la clave: se incrementa en cada avance
+    // (con o sin diana), así que ahora SIEMPRE dispara el recálculo correspondiente.
+    val totalFlechasEntrenamiento: StateFlow<Int> = estado
+        .map { Triple(it.entrenamientoId, it.contador, it.flechasPendientes.size) }
+        .distinctUntilChanged()
+        .map { (entrenamientoId, _, pendientes) ->
+            if (entrenamientoId == null) 0 else repo.totalFlechasEnCurso(entrenamientoId) + pendientes
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     val contadorClickDoble: StateFlow<Boolean> = AjustesPrefs.contadorClickDobleFlow(app)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)

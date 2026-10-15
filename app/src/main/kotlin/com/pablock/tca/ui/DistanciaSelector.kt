@@ -19,7 +19,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val DISTANCIAS_DEFAULT = listOf(10.0, 20.0, 30.0, 40.0, 50.0, 70.0, 90.0)
+// No es private: TcaRepository (para el fallback de "Distancia default" al borrar una
+// diana guardada) y AjustesScreen (para el desplegable de "Distancia default") también
+// la usan.
+val DISTANCIAS_DEFAULT = listOf(10.0, 20.0, 30.0, 40.0, 50.0, 70.0, 90.0)
 
 fun formatDistancia(d: Double): String =
     if (d == d.toLong().toDouble()) d.toLong().toString() else d.toString()

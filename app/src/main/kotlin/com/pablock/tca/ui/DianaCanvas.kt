@@ -118,8 +118,11 @@ private fun colorMapaCalor(cantidad: Int): Color = when {
 
 // Diana de solo lectura para el resumen de Estadísticas: siempre a escala completa
 // (sin Zoom, eso es solo una ayuda para tirar) y sin capturar toques.
+// radioPunto: 7f por default — se probó 3x (21f) para la miniatura de cada serie en el
+// Detalle, pero se veía desproporcionado; se dejó en el mismo tamaño que el mapa de
+// calor principal.
 @Composable
-fun DianaMapaDeCalor(conteoPorCoordenada: Map<Pair<Int, Int>, Int>, modifier: Modifier = Modifier) {
+fun DianaMapaDeCalor(conteoPorCoordenada: Map<Pair<Int, Int>, Int>, modifier: Modifier = Modifier, radioPunto: Float = 7f) {
     Canvas(modifier = modifier.fillMaxWidth().aspectRatio(1f)) {
         val radioPx = size.width / 2f * FACTOR_RADIO_DIANA
         val centro = Offset(size.width / 2f, size.height / 2f)
@@ -129,7 +132,7 @@ fun DianaMapaDeCalor(conteoPorCoordenada: Map<Pair<Int, Int>, Int>, modifier: Mo
         for ((coordenada, cantidad) in conteoPorCoordenada) {
             val (puntaje, azimut) = coordenada
             val (dx, dy) = posicionEnDiana(puntaje, azimut, radioPx, zoom = false)
-            drawCircle(color = colorMapaCalor(cantidad), radius = 7f, center = centro + Offset(dx, dy))
+            drawCircle(color = colorMapaCalor(cantidad), radius = radioPunto, center = centro + Offset(dx, dy))
         }
     }
 }

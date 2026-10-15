@@ -226,4 +226,23 @@ object AjustesPrefs {
     suspend fun setZoomDefault(context: Context, activo: Boolean) {
         context.tcaDataStore.edit { it[ZOOM_DEFAULT] = activo }
     }
+
+    // Distancia a la que se resetea EntrenamientoEnCursoPrefs.DISTANCIA al terminar un
+    // entrenamiento completo (nunca entre series, ver TcaRepository.terminarEntrenamiento).
+    // null = "Ninguna" (default): la distancia se queda como la última usada, igual que el
+    // comportamiento de siempre — "sin configurar" y "Ninguna" elegida a propósito son lo
+    // mismo (ausencia de la key), no hace falta un valor centinela aparte.
+    private val DISTANCIA_DEFAULT = doublePreferencesKey("distancia_default")
+
+    fun distanciaDefaultFlow(context: Context): Flow<Double?> =
+        context.tcaDataStore.data.map { it[DISTANCIA_DEFAULT] }
+
+    suspend fun distanciaDefault(context: Context): Double? =
+        context.tcaDataStore.data.first()[DISTANCIA_DEFAULT]
+
+    suspend fun setDistanciaDefault(context: Context, distancia: Double?) {
+        context.tcaDataStore.edit { prefs ->
+            if (distancia == null) prefs.remove(DISTANCIA_DEFAULT) else prefs[DISTANCIA_DEFAULT] = distancia
+        }
+    }
 }

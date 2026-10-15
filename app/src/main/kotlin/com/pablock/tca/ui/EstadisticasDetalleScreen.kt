@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -102,11 +105,17 @@ private fun FilaResumen(etiqueta: String, valor: String) {
     }
 }
 
+// Tamaño fijo de la miniatura de mapa de calor — nunca debe agrandar el renglón, y a
+// esta altura ya cabe de sobra bajo el bloque más alto (el listado de P/UR de la
+// izquierda, que con pocas flechas es más bajo que esto, pero el renglón entero rara
+// vez baja de esto de alto por el bloque de Tiempo/Distancia/Diana/Flechas de la derecha).
+private val TAMANO_MINIATURA_CALOR = 56.dp
+
 @Composable
 private fun FilaSerieDetalle(serie: DetalleSerie, ubicacionReloj: Boolean) {
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
         Text("Serie ${serie.orden}:", color = Color.White, fontSize = 16.sp)
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
             if (serie.flechas.isNotEmpty()) {
                 Column(modifier = Modifier.padding(start = 16.dp)) {
                     Text("P  UR", color = Color.White.copy(alpha = 0.6f))
@@ -121,6 +130,16 @@ private fun FilaSerieDetalle(serie: DetalleSerie, ubicacionReloj: Boolean) {
                 Text("Distancia: ${formatDistancia(serie.distancia)}", color = Color.White)
                 Text("Diana: ${serie.dianaCm}", color = Color.White)
                 Text("Flechas: ${serie.numeroFlechas}", color = Color.White)
+            }
+            // Sin datos por flecha (serie avanzada solo con el contador, sin Guardar) no
+            // hay coordenadas que dibujar — se omite la miniatura para esa serie.
+            if (serie.flechas.isNotEmpty()) {
+                Spacer(modifier = Modifier.weight(1f))
+                val conteoSerie = serie.flechas.groupingBy { (_, puntaje, ur) -> puntaje to ur }.eachCount()
+                DianaMapaDeCalor(
+                    conteoPorCoordenada = conteoSerie,
+                    modifier = Modifier.size(TAMANO_MINIATURA_CALOR),
+                )
             }
         }
     }

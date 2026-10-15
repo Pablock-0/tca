@@ -30,6 +30,10 @@ class AjustesViewModel(app: Application) : AndroidViewModel(app) {
     val dianaDefaultCm: StateFlow<Int> = AjustesPrefs.dianaDefaultCm(ctx)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 40)
 
+    // null = "Ninguna" (default) — ver AjustesPrefs.DISTANCIA_DEFAULT.
+    val distanciaDefault: StateFlow<Double?> = AjustesPrefs.distanciaDefaultFlow(ctx)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val dianasGuardadas: StateFlow<List<DianaConfig>> = repo.dianasGuardadasFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -54,6 +58,8 @@ class AjustesViewModel(app: Application) : AndroidViewModel(app) {
     fun setFlechasDefault(cantidad: Int) = viewModelScope.launch { AjustesPrefs.setFlechasDefault(ctx, cantidad) }
 
     fun setDianaDefaultCm(cm: Int) = viewModelScope.launch { AjustesPrefs.setDianaDefaultCm(ctx, cm) }
+
+    fun setDistanciaDefault(distancia: Double?) = viewModelScope.launch { AjustesPrefs.setDistanciaDefault(ctx, distancia) }
 
     fun agregarDiana(distancia: Double, dianaCm: Int) = viewModelScope.launch {
         if (dianasGuardadas.value.size >= DIANAS_MAXIMO) return@launch

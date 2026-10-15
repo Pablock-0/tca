@@ -57,6 +57,7 @@ fun PrincipalScreen(
     viewModel: PrincipalViewModel = viewModel(),
 ) {
     val estado by viewModel.estado.collectAsState()
+    val totalFlechasEntrenamiento by viewModel.totalFlechasEntrenamiento.collectAsState()
     val contadorClickDoble by viewModel.contadorClickDoble.collectAsState()
     val contadorDigitos by viewModel.contadorExtensionDigitos.collectAsState()
     val registroModo by viewModel.registroModo.collectAsState()
@@ -110,13 +111,24 @@ fun PrincipalScreen(
             }
 
             // Punto 1: la etiqueta "n-P" vive arriba, centrada, en vez de bajo la diana.
+            // Encima de ella (blanco), el total de flechas del entrenamiento en curso —
+            // mismo lugar y tipografía, solo visible mientras hay diana en pantalla
+            // (estado.contador >= 0: arrancó con Iniciar/Contador/Guardar y no se ha
+            // guardado el entrenamiento todavía).
             val ultima = estado.flechasPendientes.lastOrNull()
-            Text(
-                text = if (ultima != null) "${estado.flechasPendientes.size}-${textoPuntaje(ultima.puntaje)}" else "",
-                color = Color(0xFF4CAF50),
-                fontSize = 40.sp,
-                modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 16.dp),
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().statusBarsPadding().padding(top = 16.dp),
+            ) {
+                if (estado.contador >= 0) {
+                    Text(text = totalFlechasEntrenamiento.toString(), color = Color.White, fontSize = 40.sp)
+                }
+                Text(
+                    text = if (ultima != null) "${estado.flechasPendientes.size}-${textoPuntaje(ultima.puntaje)}" else "",
+                    color = Color(0xFF4CAF50),
+                    fontSize = 40.sp,
+                )
+            }
         }
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {

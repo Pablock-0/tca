@@ -72,6 +72,7 @@ fun AjustesScreen(
     val zoomDefault by viewModel.zoomDefault.collectAsState()
     val flechasDefault by viewModel.flechasDefault.collectAsState()
     val dianaDefaultCm by viewModel.dianaDefaultCm.collectAsState()
+    val distanciaDefault by viewModel.distanciaDefault.collectAsState()
     val dianasGuardadas by viewModel.dianasGuardadas.collectAsState()
     val notificacionActiva by viewModel.notificacionActiva.collectAsState()
     val registroModo by viewModel.registroModo.collectAsState()
@@ -153,6 +154,11 @@ fun AjustesScreen(
                 val siguiente = DIANAS_DEFAULT[(indice + 1).mod(DIANAS_DEFAULT.size)]
                 viewModel.setDianaDefaultCm(siguiente)
             },
+        )
+        FilaDropdownDistanciaDefault(
+            valorActual = distanciaDefault,
+            opciones = (DISTANCIAS_DEFAULT + dianasGuardadas.map { it.distancia }).distinct().sorted(),
+            onSeleccionar = viewModel::setDistanciaDefault,
         )
         FilaClickeable(
             etiqueta = "Editar dianas",
@@ -316,6 +322,34 @@ private fun FilaDropdownEntero(etiqueta: String, valor: Int, opciones: List<Int>
             DropdownMenu(expanded = expandido, onDismissRequest = { expandido = false }) {
                 for (op in opciones) {
                     DropdownMenuItem(text = { Text(op.toString()) }, onClick = { expandido = false; onSeleccionar(op) })
+                }
+            }
+        }
+    }
+}
+
+// "Distancia default": a qué distancia se resetea EntrenamientoEnCursoPrefs.DISTANCIA al
+// terminar un entrenamiento completo (nunca entre series — ver TcaRepository.terminarEntrenamiento).
+// "Ninguna" (null) es la opción default: la distancia se queda como la última usada, igual
+// que el comportamiento de siempre.
+@Composable
+private fun FilaDropdownDistanciaDefault(valorActual: Double?, opciones: List<Double>, onSeleccionar: (Double?) -> Unit) {
+    var expandido by remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text("Distancia default", color = Color.White)
+        Box {
+            Text(
+                valorActual?.let { formatDistancia(it) } ?: "Ninguna",
+                color = ColorBordeTca,
+                modifier = Modifier.clickable { expandido = true },
+            )
+            DropdownMenu(expanded = expandido, onDismissRequest = { expandido = false }) {
+                DropdownMenuItem(text = { Text("Ninguna") }, onClick = { expandido = false; onSeleccionar(null) })
+                for (op in opciones) {
+                    DropdownMenuItem(text = { Text(formatDistancia(op)) }, onClick = { expandido = false; onSeleccionar(op) })
                 }
             }
         }

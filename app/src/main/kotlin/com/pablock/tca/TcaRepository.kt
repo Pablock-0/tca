@@ -7,6 +7,7 @@ import com.pablock.tca.db.Flecha
 import com.pablock.tca.db.Nota
 import com.pablock.tca.db.Serie
 import com.pablock.tca.db.TcaDatabase
+import com.pablock.tca.ui.DISTANCIAS_DEFAULT
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
@@ -34,6 +35,12 @@ class TcaRepository(private val context: Context) {
 
     suspend fun eliminarDiana(distancia: Double) {
         db.dianaConfigDao().eliminar(distancia)
+        // Si la distancia borrada era la "Distancia default" y no es una de las 7 de
+        // fábrica (esas siempre siguen seleccionables), cae a "Ninguna" en vez de quedar
+        // apuntando a un valor que ya no aparece en el desplegable.
+        if (distancia !in DISTANCIAS_DEFAULT && AjustesPrefs.distanciaDefault(context) == distancia) {
+            AjustesPrefs.setDistanciaDefault(context, null)
+        }
     }
 
     suspend fun obtenerEntrenamiento(id: Long): Entrenamiento? = db.entrenamientoDao().obtenerPorId(id)
@@ -146,22 +153,39 @@ class TcaRepository(private val context: Context) {
         }
         db.entrenamientoDao().actualizar(entrenamiento.copy(nombre = nombreFinal, finalizado = true))
         EntrenamientoEnCursoPrefs.limpiar(context, System.currentTimeMillis())
+        // "Distancia default" (Ajustes) solo se aplica AQUÍ, al terminar un entrenamiento
+        // completo — nunca entre series (avanzarContador no la toca). "Ninguna" (null,
+        // default) dispensa: la distancia se queda como la última usada, igual que siempre.
+        AjustesPrefs.distanciaDefault(context)?.let { EntrenamientoEnCursoPrefs.setDistancia(context, it) }
     }
 
     fun entrenamientosFinalizados(): Flow<List<Entrenamiento>> = db.entrenamientoDao().obtenerFinalizados()
+
+    // Total de flechas de un entrenamiento (guardado o en curso): suma "Serie.flechasEstimadas"
+    // cuando la serie se avanzó solo con el contador (sin Guardar, sin filas en Flecha), o el
+    // conteo real de Flecha cuando sí las hay — mismo criterio en cargarResumen, cargarDetalle
+    // y el contador en vivo de la pantalla principal (totalFlechasEnCurso), para no divergir.
+    private fun sumarFlechasDeSeries(series: List<Serie>, flechasPorSerieId: Map<Long, Int>): Int =
+        series.sumOf { it.flechasEstimadas ?: (flechasPorSerieId[it.id] ?: 0) }
+
+    // Total en vivo para la pantalla principal mientras el entrenamiento sigue abierto — no
+    // incluye las flechas de la serie actual aún sin avanzar (esas las suma el ViewModel aparte,
+    // ver PrincipalViewModel.totalFlechasEntrenamiento, porque solo él conoce flechasPendientes).
+    suspend fun totalFlechasEnCurso(entrenamientoId: Long): Int {
+        val series = db.serieDao().obtenerPorEntrenamiento(entrenamientoId)
+        val flechasPorSerieId = db.flechaDao().obtenerPorSeries(series.map { it.id }).groupingBy { it.serieId }.eachCount()
+        return sumarFlechasDeSeries(series, flechasPorSerieId)
+    }
 
     suspend fun cargarResumen(entrenamientoId: Long): ResumenEntrenamiento? {
         val entrenamiento = db.entrenamientoDao().obtenerPorId(entrenamientoId) ?: return null
         val series = db.serieDao().obtenerPorEntrenamiento(entrenamientoId)
         val flechas = db.flechaDao().obtenerPorSeries(series.map { it.id })
         val conteo = flechas.groupingBy { it.puntaje to it.ubicacionRadialAzimut }.eachCount()
-        // "Flechas totales" debe sumar TODA la actividad del entrenamiento, no solo las
-        // flechas con P/UR real: una serie avanzada solo con el contador (sin Guardar) no
-        // deja filas en Flecha, pero sí tiene Serie.flechasEstimadas — mismo criterio que
-        // numeroFlechas() en cargarDetalle. El mapa de calor (conteoPorCoordenada) sigue
-        // basado solo en flechas reales, porque las estimadas no tienen coordenada que graficar.
+        // El mapa de calor (conteoPorCoordenada) se queda solo con flechas reales a propósito
+        // — las estimadas no tienen coordenada que graficar.
         val flechasPorSerieId = flechas.groupingBy { it.serieId }.eachCount()
-        val totalFlechas = series.sumOf { it.flechasEstimadas ?: (flechasPorSerieId[it.id] ?: 0) }
+        val totalFlechas = sumarFlechasDeSeries(series, flechasPorSerieId)
         return ResumenEntrenamiento(entrenamiento, totalFlechas, conteo)
     }
 
