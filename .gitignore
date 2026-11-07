@@ -20,3 +20,4 @@ build/
 
 # APK que se sube como asset del release (ver README > Publicar una versión).
 /tca.apk
+respaldos/

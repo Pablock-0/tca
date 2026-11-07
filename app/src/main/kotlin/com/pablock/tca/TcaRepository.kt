@@ -75,7 +75,10 @@ class TcaRepository(private val context: Context) {
             // valor más reciente para esta distancia — ver nota del prompt sobre esto.
             val dianaCm = resolverDianaCm(distancia)
             val orden = db.serieDao().contarPorEntrenamiento(entrenamientoId) + 1
-            if (guardar) {
+            // Guardar sin ninguna flecha marcada se trata igual que el contador: una serie
+            // con 0 flechas reales arrastraba el promedio de estimarFlechasSinDatos a 0
+            // (bug del 4/11/26: 15 series de 8 sumaban 75 en vez de 120).
+            if (guardar && flechasPendientes.isNotEmpty()) {
                 val serieId = db.serieDao().insertar(
                     Serie(
                         entrenamientoId = entrenamientoId,
@@ -85,13 +88,11 @@ class TcaRepository(private val context: Context) {
                         tiempoSegundos = deltaSegundos,
                     ),
                 )
-                if (flechasPendientes.isNotEmpty()) {
-                    db.flechaDao().insertarTodas(
-                        flechasPendientes.mapIndexed { i, f ->
-                            Flecha(serieId = serieId, orden = i + 1, puntaje = f.puntaje, ubicacionRadialAzimut = f.azimut)
-                        },
-                    )
-                }
+                db.flechaDao().insertarTodas(
+                    flechasPendientes.mapIndexed { i, f ->
+                        Flecha(serieId = serieId, orden = i + 1, puntaje = f.puntaje, ubicacionRadialAzimut = f.azimut)
+                    },
+                )
             } else {
                 db.serieDao().insertar(
                     Serie(
@@ -110,14 +111,16 @@ class TcaRepository(private val context: Context) {
     }
 
     // Promedio de "flechas por serie" entre las series de este entrenamiento que sí
-    // tienen datos reales (guardadas con Guardar); si no hay ninguna todavía, usa
-    // "Flechas default" de Ajustes (default 6).
+    // tienen datos reales (guardadas con Guardar y con al menos una flecha); si no hay
+    // ninguna todavía, usa "Flechas default" de Ajustes (default 6). Las series vacías
+    // (guardadas sin flechas antes del fix de v0.4) se ignoran para no bajar el promedio.
     private suspend fun estimarFlechasSinDatos(entrenamientoId: Long): Int {
         val series = db.serieDao().obtenerPorEntrenamiento(entrenamientoId)
-        val seriesConDatos = series.filter { it.flechasEstimadas == null }
-        if (seriesConDatos.isEmpty()) return AjustesPrefs.flechasDefault(context)
-        val totalFlechasReales = db.flechaDao().obtenerPorSeries(seriesConDatos.map { it.id }).size
-        return (totalFlechasReales.toDouble() / seriesConDatos.size).roundToInt()
+        val idsSinEstimar = series.filter { it.flechasEstimadas == null }.map { it.id }
+        val flechasPorSerie = if (idsSinEstimar.isEmpty()) emptyMap()
+            else db.flechaDao().obtenerPorSeries(idsSinEstimar).groupingBy { it.serieId }.eachCount()
+        if (flechasPorSerie.isEmpty()) return AjustesPrefs.flechasDefault(context)
+        return (flechasPorSerie.values.sum().toDouble() / flechasPorSerie.size).roundToInt()
     }
 
     suspend fun setZoom(activo: Boolean) {
